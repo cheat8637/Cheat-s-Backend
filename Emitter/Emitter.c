@@ -4,83 +4,83 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-uint8_t IsAlreadyCreated = 0;
-Emitter_s* This = NULL;
+static bool IsAlreadyCreated = false;
+static Emitter_s* This = NULL;
 
-void FreeEmitter(void)
+static void FreeEmitter(void)
 {
-    if (This->Buffer) free(This->Buffer);
     free(This);
 };
-void ByteEmitter(uint8_t Data)
+static void ByteEmitter(uint8_t Data, Buffer_s* Buffer)
 {
-    if (This->Size >= This->Capacity)
+    if (Buffer->Size >= Buffer->Capacity)
     {
-        This->Capacity = (This->Capacity == 0) ? 32 : This->Capacity * 2;
-        uint8_t* NewBuffer = realloc(This->Buffer, This->Capacity);
+        Buffer->Capacity = (Buffer->Capacity == 0) ? 32 : Buffer->Capacity * 2;
+        uint8_t* NewBuffer = realloc(Buffer->Data, Buffer->Capacity);
         if (!NewBuffer)
         {
-            This->Free();
-            Error("Byte()", "out of memory, failed to allocate %zu bytes (realloc for buffer).", This->Capacity);
+            Buffer->Free(Buffer);
+            Error("Byte()", "out of memory, failed to allocate %zu bytes (realloc for Buffer_s structure).", Buffer->Capacity);
         };
-        This->Buffer = NewBuffer;
+        Buffer->Data = NewBuffer;
     };
-    This->Buffer[This->Size] = Data;
-    This->Size++;
+    Buffer->Data[Buffer->Size] = Data;
+    Buffer->Size++;
 };
-void BytesEmitter(const uint8_t* Data, size_t Length)
+static void BytesEmitter(const uint8_t* Data, size_t Length, Buffer_s* Buffer)
 {
     if (!Data) return;
     for (size_t ByteIndex = 0; ByteIndex < Length; ByteIndex++)
     {
-        This->Byte(Data[ByteIndex]);
+        This->Byte(Data[ByteIndex], Buffer);
     };
 };
-void Byte4Emitter(uint32_t Data, int Mode)
+static void Byte4Emitter(uint32_t Data, int Mode, Buffer_s* Buffer)
 {
     switch (Mode)
     {
         case LITTLE_ENDIAN:
-            This->Byte(Data & 0xFF);
-            This->Byte((Data >> 8) & 0xFF);
-            This->Byte((Data >> 16) & 0xFF);
-            This->Byte((Data >> 24) & 0xFF);
+            This->Byte(Data & 0xFF, Buffer);
+            This->Byte((Data >> 8) & 0xFF, Buffer);
+            This->Byte((Data >> 16) & 0xFF, Buffer);
+            This->Byte((Data >> 24) & 0xFF, Buffer);
             break;
         case BIG_ENDIAN:
-            This->Byte((Data >> 24) & 0xFF);
-            This->Byte((Data >> 16) & 0xFF);
-            This->Byte((Data >> 8) & 0xFF);
-            This->Byte(Data & 0xFF);
+            This->Byte((Data >> 24) & 0xFF, Buffer);
+            This->Byte((Data >> 16) & 0xFF, Buffer);
+            This->Byte((Data >> 8) & 0xFF, Buffer);
+            This->Byte(Data & 0xFF, Buffer);
             break;
         default:
             Error("Byte4()", "invalid endianess mode: %d, try LITTLE- or BIG- ENDIANs.", Mode);
             break;
     };
 };
-void Byte8Emitter(uint64_t Data, int Mode)
+static void Byte8Emitter(uint64_t Data, int Mode, Buffer_s* Buffer)
 {
     switch (Mode)
     {
         case LITTLE_ENDIAN:
-            This->Byte(Data & 0xFF);
-            This->Byte((Data >> 8) & 0xFF);
-            This->Byte((Data >> 16) & 0xFF);
-            This->Byte((Data >> 24) & 0xFF);
-            This->Byte((Data >> 32) & 0xFF);
-            This->Byte((Data >> 40) & 0xFF);
-            This->Byte((Data >> 48) & 0xFF);
-            This->Byte((Data >> 56) & 0xFF);
+            This->Byte(Data & 0xFF,  Buffer);
+            This->Byte((Data >> 8) & 0xFF, Buffer);
+            This->Byte((Data >> 16) & 0xFF, Buffer);
+            This->Byte((Data >> 24) & 0xFF, Buffer);
+            This->Byte((Data >> 32) & 0xFF, Buffer);
+            This->Byte((Data >> 40) & 0xFF, Buffer);
+            This->Byte((Data >> 48) & 0xFF, Buffer);
+            This->Byte((Data >> 56) & 0xFF, Buffer);
             break;
         case BIG_ENDIAN:
-            This->Byte((Data >> 56) & 0xFF);
-            This->Byte((Data >> 48) & 0xFF);
-            This->Byte((Data >> 40) & 0xFF);
-            This->Byte((Data >> 32) & 0xFF);
-            This->Byte((Data >> 24) & 0xFF);
-            This->Byte((Data >> 16) & 0xFF);
-            This->Byte((Data >> 8) & 0xFF);
-            This->Byte(Data & 0xFF);
+            This->Byte((Data >> 56) & 0xFF, Buffer);
+            This->Byte((Data >> 48) & 0xFF, Buffer);
+            This->Byte((Data >> 40) & 0xFF, Buffer);
+            This->Byte((Data >> 32) & 0xFF, Buffer);
+            This->Byte((Data >> 24) & 0xFF, Buffer);
+            This->Byte((Data >> 16) & 0xFF, Buffer);
+            This->Byte((Data >> 8) & 0xFF, Buffer);
+            This->Byte(Data & 0xFF, Buffer);
             break;
         default:
             Error("Byte8()", "invalid endianess mode: %d, try LITTLE- or BIG- ENDIANs.", Mode);
@@ -90,23 +90,19 @@ void Byte8Emitter(uint64_t Data, int Mode)
 
 Emitter_s* Emitter(void)
 {
-    if (IsAlreadyCreated == 1)
+    if (IsAlreadyCreated == true)
     {
-        Error("Emitter()", "You can't have more than 1 emitter at a time.");
+        Error("Emitter()", "you can't have more than 1 emitter at a time.");
     }
     Emitter_s* Object = (Emitter_s*)malloc(sizeof(Emitter_s));
-    
-    Object->Buffer = NULL;
-    Object->Size = 0;
-    Object->Capacity = 0;
-    
+
     Object->Free = FreeEmitter;
     Object->Byte = ByteEmitter;
     Object->Bytes = BytesEmitter;
     Object->Byte4 = Byte4Emitter;
     Object->Byte8 = Byte8Emitter;
     
-    IsAlreadyCreated = 1;
+    IsAlreadyCreated = true;
     This = Object;
     
     return Object;

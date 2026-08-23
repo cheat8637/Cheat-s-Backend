@@ -3,9 +3,20 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define MakeREG(Data) (void*)(uintptr_t)Data
 #define MakeIMM(Data) (void*)(intptr_t)Data
+
+typedef struct Buffer_s Buffer_s;
+
+struct Buffer_s
+{
+    uint8_t* Data;
+    size_t Size;
+    size_t Capacity;
+    void (*Free)(Buffer_s* This);
+};
 
 typedef enum
 {
@@ -14,14 +25,14 @@ typedef enum
     R12, R13, R14, R15, R16, R17,
     R18, R19, R20, R21, R22, R23,
     R24, R25, R26, R27, R28, R29, 
-    R30, SPR, RVR,
+    R30, SPR, RVR, RRR, // StackPointer, ReturnValue, Remainder
 }
 RegisterNumber;
 
 typedef enum
 {
     REGISTER_OPERAND,
-    IMMEDIATE_OPERAND,
+    LITERAL_OPERAND,
     ADDRESS_OPERAND,
 }
 OperandType;
@@ -31,13 +42,27 @@ typedef struct Address_s Address_s;
 struct Address_s
 {
     bool IsAbsolute;
+    bool Is32Bit;
     union
     {
         uintptr_t Absolute;
         RegisterNumber Register;
     };
     int64_t Offset;
-    void (*Free)(Address_s* Object);
+    void (*Free)(Address_s* This);
+};
+
+typedef struct Literal_s Literal_s;
+
+struct Literal_s
+{
+    bool IsASCII;
+    union
+    {
+        int64_t Number;
+        const char* ASCII;
+    };
+    void (*Free)(Literal_s* This);
 };
 
 typedef struct Operand_s Operand_s;
@@ -48,13 +73,16 @@ struct Operand_s
     union
     {
         RegisterNumber Register;
-        int64_t Immediate;
+        Literal_s* Literal;
         Address_s* Address;
     };
+    bool Is32Bit;
     void (*Free)(Operand_s* Object);
 };
 
-Address_s* Address(bool IsAbsolute, void* Data, int64_t Offset);
-Operand_s* Operand(OperandType Type, void* Data);
+Buffer_s* Buffer(void);
+Address_s* Address(bool IsAbsolute, bool Is32Bit, void* Data, int64_t Offset);
+Literal_s* Literal(bool IsASCII, void* Data);
+Operand_s* Operand(OperandType Type, bool Is32Bit, void* Data);
 
 #endif

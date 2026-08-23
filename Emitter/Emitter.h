@@ -1,6 +1,7 @@
 #ifndef CHEAT_EMITTER_H
 #define CHEAT_EMITTER_H
 
+#include "../CheatAPI/Types.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -11,14 +12,11 @@ typedef struct Emitter_s Emitter_s;
 
 struct Emitter_s
 {
-    uint8_t* Buffer;
-    size_t Capacity;
-    size_t Size;
     void (*Free)(void);
-    void (*Byte)(uint8_t Data);
-    void (*Bytes)(const uint8_t* Data, size_t Length);
-    void (*Byte4)(uint32_t Data, int Mode);
-    void (*Byte8)(uint64_t Data, int Mode);
+    void (*Byte)(uint8_t Data, Buffer_s* Buffer);
+    void (*Bytes)(const uint8_t* Data, size_t Length, Buffer_s* Buffer);
+    void (*Byte4)(uint32_t Data, int Mode, Buffer_s* Buffer);
+    void (*Byte8)(uint64_t Data, int Mode, Buffer_s* Buffer);
 };
 
 Emitter_s* Emitter(void);
