@@ -22,7 +22,7 @@ void AddArchitecture(Architecture_s* Architecture)
         if (!NewArch)
         {
             free(Architectures);
-            Error("AddArchitecture()", "failed to allocate %zu bytes (realloc for Architectures dynamic array).", ACapacity * sizeof(Architecture_s*));
+            Error("AddArchitecture()", "failed to allocate %zu bytes (realloc for Architectures dynamic array)", ACapacity * sizeof(Architecture_s*));
         };
         Architectures = NewArch;
     }
@@ -49,7 +49,7 @@ void AddOS(OS_s* OS)
         if (!NewOS)
         {
             free(OSs);
-            Error("AddOS()", "failed to allocate %zu bytes (for OS_s dynamic array).", OCapacity * sizeof(OS_s*));
+            Error("AddOS()", "failed to allocate %zu bytes (for OS_s dynamic array)", OCapacity * sizeof(OS_s*));
         };
         OSs = NewOS;
     };

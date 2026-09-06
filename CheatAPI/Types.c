@@ -55,7 +55,7 @@ Address_s* Address(bool IsAbsolute, bool Is32Bit, void* Data, int64_t Offset)
     Object->Free = FreeAddress_s;
     return Object;
 };
-Literal_s* Literal(bool IsASCII, void* Data)
+Literal_s* Literal(bool IsASCII, uint32_t ASCIILength, void* Data)
 {
     Literal_s* Object = (Literal_s*)malloc(sizeof(Literal_s));
     if (!Object)
@@ -63,6 +63,7 @@ Literal_s* Literal(bool IsASCII, void* Data)
         Error("Literal()", "failed to allocate %zu bytes (for Litral_s structure).", sizeof(Literal_s));
     }
     Object->IsASCII = IsASCII;
+    Object->ASCIILength;
     if (IsASCII == true)
     {
         Object->ASCII = (const char*)Data;
@@ -93,6 +94,12 @@ Operand_s* Operand(OperandType Type, bool Is32Bit, void* Data)
             break;
         case ADDRESS_OPERAND:
             Object->Address = (Address_s*)Data;
+            break;
+        case SYMBOL_OPERAND:
+            Object->Symbol = (char*)Data;
+            break;
+        default:
+            Error("Operand()", "invalid operand type");
             break;
     };
     Object->Free = FreeOperand_s;
