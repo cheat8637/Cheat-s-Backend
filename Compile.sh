@@ -1,3 +1,2 @@
 shopt -s globstar
-cd ~/CheatBackend
-clang -o program **/*.c
+clang -std=c23 -D_POSIX_C_SOURCE=200809L -o program **/*.c

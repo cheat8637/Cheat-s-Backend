@@ -2,7 +2,6 @@
 #define CHEAT_PLATFORM_H
 
 #include "Types.h"
-#include <stdbool.h>
 #include <stdint.h>
 
 #define OUTPUT_ELF 0
@@ -27,11 +26,11 @@ struct Architecture_s
     const char* Name;
     int OutputFormat;
 
-    void (*SetBuffer)(Buffer_s* NewBuffer, BufferType Type);
+    void (*SetBuffer)(Buffer_s* NewBuffer, SectionType Type);
     
-    void (*Move)(Operand_s* Destination, Operand_s* Source);
-    void (*AddrOf)(RegisterNumber Destination, Operand_s* Source);
-    void (*Load)(Operand_s* Destination, Address_s* Source);
+    void (*Move)(RegisterNumber Destination, Operand_s* Source);
+    void (*AddrOf)(RegisterNumber Destination, Operand_s* Source, int64_t Addend);
+    void (*Load)(RegisterNumber Destination, Operand_s* Source);
     void (*Store)(Operand_s* Destination, Address_s* Source);
     
     void (*Add)(Triple);
@@ -59,15 +58,15 @@ struct Architecture_s
     void (*Call)(const char* Name);
     void (*If)(Operand_s* A, int BinaryOperation, Operand_s* B, bool IsSigned, Address_s* Code);
 
-    void (*Byte)(const char* Name, uint8_t Data, BufferType Type);
-    void (*Byte2)(const char* Name, uint16_t Data,BufferType Type;
-    void (*Byte4)(const char* Name, uint32_t Data, BufferType Type);
-    void (*Byte8)(const char* Name, uint64_t Data, BufferType Type);
-    void (*ASCII)(const char* Name, const char* Data, size_t Length, BufferType Type);
-    void (*Reserve)(const char* Name, size_t Size, BufferType Type);
+    void (*Byte)(const char* Name, uint8_t Data, SectionType Type, bool IsGlobal);
+    void (*Byte2)(const char* Name, uint16_t Data, SectionType Type, bool IsGlobal);
+    void (*Byte4)(const char* Name, uint32_t Data, SectionType Type, bool IsGlobal);
+    void (*Byte8)(const char* Name, uint64_t Data, SectionType Type, bool IsGlobal);
+    void (*ASCII)(const char* Name, const char* Data, size_t Length, SectionType Type, bool IsGlobal);
+    void (*Reserve)(const char* Name, size_t Size, SectionType Type, bool IsGlobal);
 
     void (*SysCall)(const char* Name);
-    void (*Specific)(uint32_t Data, BufferType Type);
+    void (*Specific)(uint32_t Data, SectionType Type);
 };
 
 typedef struct OS_s OS_s;

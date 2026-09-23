@@ -5,7 +5,6 @@
 #include "Platform.h"
 #include "Types.h"
 #include <stdint.h>
-#include <stdbool.h>
 
 typedef struct CheatAPI CheatAPI;
 

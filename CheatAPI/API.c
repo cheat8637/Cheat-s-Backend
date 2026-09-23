@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 static bool IsAlreadyCreated = false;
 static const Architecture_s* CurrentArch = NULL;

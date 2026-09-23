@@ -2,12 +2,11 @@
 #define CHEAT_OPERAND_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #define MakeREG(Data) (void*)(uintptr_t)Data
 #define MakeIMM(Data) (void*)(intptr_t)Data
-#dedine MakeSYM(Data) (void*)Data
+#define MakeSYM(Data) (void*)Data
 
 typedef struct Buffer_s Buffer_s;
 
@@ -21,12 +20,22 @@ struct Buffer_s
 
 typedef enum
 {
-    CODE_BUFFER,
-    DATA_BUFFER,
-    RDATA_BUFFER,
-    UDATA_BUFFER
+    CODE_SECTION,
+    DATA_SECTION,
+    RDATA_SECTION,
+    UDATA_SECTION,
+    UNDEFINED_SECTION
 }
-BufferType;
+SectionType;
+
+typedef enum
+{
+    REGISTER_OPERAND,
+    LITERAL_OPERAND,
+    ADDRESS_OPERAND,
+    SYMBOL_OPERAND
+}
+OperandType;
 
 typedef enum
 {
@@ -39,27 +48,42 @@ typedef enum
 }
 RegisterNumber;
 
+typedef struct Register_s Register_s;
+
+struct Register_s
+{
+    bool Is32Bit;
+    RegisterNumber Reg
+};
+
 typedef enum
 {
-    REGISTER_OPERAND,
-    LITERAL_OPERAND,
-    ADDRESS_OPERAND,
-    SYMBOL_OPERAND
+    SYMBOL_TYPE_NOTYPE, // aka Label or Undefined
+    SYMBOL_TYPE_VARIABLE,
+    SYMBOL_TYPE_FUNCTION
 }
-OperandType;
+SymbolType;
+
+typedef struct SymbolRef_s SymbolRef_s;
+
+struct SymbolRef_s // -erence
+{
+    const char* Name;
+    SymbolType Type;
+    void (*Free)(SymbolRef_s* This);
+};
 
 typedef struct Address_s Address_s;
 
 struct Address_s
 {
-    bool IsAbsolute;
     bool Is32Bit;
+    bool IsAbsolute;
     union
     {
         uintptr_t Absolute;
         RegisterNumber Register;
     };
-    int64_t Offset;
     void (*Free)(Address_s* This);
 };
 
@@ -87,15 +111,16 @@ struct Operand_s
         RegisterNumber FRegister;
         Literal_s* FLiteral;
         Address_s* FAddress;
-        char* FSymbol;
+        SymbolRef_s* FSymbol;
     };
     bool Is32Bit;
     void (*Free)(Operand_s* Object);
 };
 
 Buffer_s* Buffer(void);
-Address_s* Address(bool IsAbsolute, bool Is32Bit, void* Data, int64_t Offset);
-Literal_s* Literal(bool IsASCII, uint32_t ASCIILength void* Data);
+SymbolRef_s* SymbolRef(const char* Name, SymbolType Type);
+Address_s* Address(bool Is32Bit, bool IsAbsolute, void* Data, int64_t Offset);
+Literal_s* Literal(bool IsASCII, uint32_t ASCIILength, void* Data);
 Operand_s* Operand(OperandType Type, bool Is32Bit, void* Data);
 
 #endif

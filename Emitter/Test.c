@@ -16,6 +16,6 @@ int main()
     };
     printf("\n");
     TestB->Free(TestB);
-    Test->Free();
+    Test->Free(Test);
     return 0;
 };
